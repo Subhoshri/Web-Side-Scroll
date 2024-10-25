@@ -17,7 +17,7 @@ let player = {
     dy: 0 // Vertical speed initialized to 0
 };
 let scrollOffset = 0;
-const groundHeight = 100; // Height of the ground on top and bottom
+const groundHeight = 0; // Height of the ground on top and bottom
 let isGameStarted = false; // Control when the game starts
 let isGameOver = false; // Track game over state
 let score = 0; // Score variable
