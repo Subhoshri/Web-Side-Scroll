@@ -14,7 +14,7 @@ let player = {
     width: 50,
     height: 50,
     speed: 3, // Constant forward speed
-    dy: 0
+    dy: 0 // Vertical speed initialized to 0
 };
 let scrollOffset = 0;
 const groundHeight = 100; // Height of the ground on top and bottom
@@ -49,6 +49,7 @@ function startGame() {
     startButton.style.display = 'none'; // Hide the start button
     score = 0; // Reset score
     player.y = canvas.height / 2; // Reset player position
+    player.dy = 0; // Reset vertical speed to 0
     scrollOffset = 0; // Reset scroll offset
     update(); // Start the game loop
 }
@@ -64,8 +65,8 @@ function gameOver() {
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "48px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("Game Over!!", canvas.width / 2, canvas.height / 2 - 100);
-    ctx.fillText(`Final Score: ${Math.floor(score)}`, canvas.width / 2, canvas.height / 2 - 50);
+    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 50);
+    ctx.fillText(`Final Score: ${Math.floor(score)}`, canvas.width / 2, canvas.height / 2 + 10);
     ctx.fillText("Press Start to Play Again", canvas.width / 2, canvas.height / 2 + 70);
     
     startButton.style.display = 'block'; // Show the start button again
