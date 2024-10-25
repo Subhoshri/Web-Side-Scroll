@@ -23,6 +23,16 @@ let isGameOver = false; // Track game over state
 let score = 0; // Score variable
 let scoreIncrementRate = 1; // How fast the score increases (changeable)
 
+// Pipe variables
+let pipes = []; // Array to hold pipe objects
+const PIPE_WIDTH = 50; // Width of the pipe
+const PIPE_GAP = 150; // Space between the top and bottom pipes
+const PIPE_FREQUENCY = 90; // How frequently pipes spawn (in frames)
+let frameCount = 0; // Frame counter for pipe generation
+
+// Variable to keep track of the last speed increase
+let lastSpeedIncrease = 0;
+
 // Start button event listener
 startButton.addEventListener('click', startGame);
 
@@ -51,6 +61,8 @@ function startGame() {
     player.y = canvas.height / 2; // Reset player position
     player.dy = 0; // Reset vertical speed to 0
     scrollOffset = 0; // Reset scroll offset
+    pipes = []; // Reset pipes
+    frameCount = 0; // Reset frame count
     update(); // Start the game loop
 }
 
@@ -83,6 +95,49 @@ function update() {
     score += scoreIncrementRate / 20; // Increment score (assuming 60 frames per second)
     scoreDisplay.innerText = Math.floor(score); // Display the integer value of score
 
+    // Pipe generation logic
+    frameCount++;
+    if (frameCount % PIPE_FREQUENCY === 0) {
+        const pipeHeight = Math.random() * (canvas.height - PIPE_GAP - groundHeight * 2) + groundHeight; // Random height for pipes
+        pipes.push({ x: canvas.width, y: pipeHeight }); // Create a new pipe with a random height
+    }
+
+    // Move pipes to the left
+    pipes.forEach(pipe => {
+        pipe.x -= player.speed; // Move pipe left based on player speed
+    });
+
+    // Check for collision with pipes
+    for (let i = 0; i < pipes.length; i++) {
+        const pipe = pipes[i];
+        if (
+            player.x < pipe.x + PIPE_WIDTH &&
+            player.x + player.width > pipe.x &&
+            (player.y < pipe.y || player.y + player.height > pipe.y + PIPE_GAP)
+        ) {
+            gameOver(); // Trigger game over if a collision is detected
+            return;
+        }
+    }
+
+    // Remove pipes that have gone off screen
+    pipes = pipes.filter(pipe => pipe.x + PIPE_WIDTH > 0);
+
+    // Check for score increment based on pipe passing
+    pipes.forEach(pipe => {
+        if (pipe.x + PIPE_WIDTH < player.x && !pipe.scored) {
+            score += 1; // Increment score for each pipe passed
+            pipe.scored = true; // Mark pipe as scored
+        }
+    });
+
+    // Check if the score has crossed a multiple of 100
+    if (Math.floor(score / 100) > lastSpeedIncrease) {
+        player.speed += 1; // Increase speed
+        scoreIncrementRate += 0.5; // Increase score increment rate
+        lastSpeedIncrease++; // Update the last speed increase
+    }
+
     // Boundaries for vertical movement
     if (player.y < groundHeight || player.y + player.height > canvas.height - groundHeight) {
         // Player has touched the ground (either top or bottom)
@@ -93,7 +148,6 @@ function update() {
     draw();
     requestAnimationFrame(update);
 }
-
 
 // Draw everything
 function draw() {
@@ -107,6 +161,13 @@ function draw() {
     // Draw ground at the top
     ctx.fillRect(-scrollOffset, 0, canvas.width * 2, groundHeight);
 
+    // Draw pipes
+    pipes.forEach(pipe => {
+        ctx.fillStyle = '#228B22'; // green color for pipes
+        ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.y); // Top pipe
+        ctx.fillRect(pipe.x, pipe.y + PIPE_GAP, PIPE_WIDTH, canvas.height - pipe.y - PIPE_GAP); // Bottom pipe
+    });
+
     // Check if the ground has scrolled out of view and reset scrollOffset
     if (scrollOffset >= canvas.width) {
         scrollOffset = 0; // Reset to create an endless effect
@@ -116,6 +177,5 @@ function draw() {
     ctx.fillStyle = '#FF6347'; // tomato color
     ctx.fillRect(player.x, player.y, player.width, player.height);
 }
-
 
 // Initially, the game is not running until the start button is clicked.
