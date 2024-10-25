@@ -9,7 +9,7 @@ canvas.height = window.innerHeight;
 
 // Game variables
 let player = {
-    x: canvas.width / 2, // Center horizontally
+    x: canvas.width / 4.5, // Center horizontally
     y: canvas.height / 2, // Center vertically
     width: 50,
     height: 50,
@@ -65,8 +65,8 @@ function gameOver() {
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "48px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 50);
-    ctx.fillText(`Final Score: ${Math.floor(score)}`, canvas.width / 2, canvas.height / 2 + 10);
+    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 100);
+    ctx.fillText(`Final Score: ${Math.floor(score)}`, canvas.width / 2, canvas.height / 2 - 40);
     ctx.fillText("Press Start to Play Again", canvas.width / 2, canvas.height / 2 + 70);
     
     startButton.style.display = 'block'; // Show the start button again
@@ -80,7 +80,7 @@ function update() {
     scrollOffset += player.speed; // Constant forward movement
 
     // Update the score continuously
-    score += scoreIncrementRate / 60; // Increment score (assuming 60 frames per second)
+    score += scoreIncrementRate / 20; // Increment score (assuming 60 frames per second)
     scoreDisplay.innerText = Math.floor(score); // Display the integer value of score
 
     // Boundaries for vertical movement
@@ -94,20 +94,28 @@ function update() {
     requestAnimationFrame(update);
 }
 
+
 // Draw everything
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Background (scrolling to the left to simulate forward movement)
     ctx.fillStyle = '#98FB98'; // light green for ground
+    
     // Draw ground at the bottom
     ctx.fillRect(-scrollOffset, canvas.height - groundHeight, canvas.width * 2, groundHeight);
     // Draw ground at the top
     ctx.fillRect(-scrollOffset, 0, canvas.width * 2, groundHeight);
 
+    // Check if the ground has scrolled out of view and reset scrollOffset
+    if (scrollOffset >= canvas.width) {
+        scrollOffset = 0; // Reset to create an endless effect
+    }
+
     // Player character
     ctx.fillStyle = '#FF6347'; // tomato color
     ctx.fillRect(player.x, player.y, player.width, player.height);
 }
+
 
 // Initially, the game is not running until the start button is clicked.
