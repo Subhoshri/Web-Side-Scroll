@@ -62,17 +62,26 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
+let nextBlockScore = 200; // Starting score for the first block appearance
+let initialSpeed=3;
+
 // Function to start the game
 function startGame() {
+    document.body.classList.remove('new-background');
+    document.body.classList.remove('night-background');
+
     isGameStarted = true;
     isGameOver = false;
     startButton.style.display = 'none'; // Hide the start button
     score = 0; // Reset score
     player.y = canvas.height / 2; // Reset player position
     player.dy = 0; // Reset vertical speed to 0
+    player.speed = initialSpeed
     scrollOffset = 0; // Reset scroll offset
     pipes = []; // Reset pipes
     frameCount = 0; // Reset frame count
+    nextBlockScore = 150;
+    lastSpeedIncrease = 0;
     update(); // Start the game loop
 }
 
@@ -80,7 +89,7 @@ function startGame() {
 function gameOver() {
     isGameOver = true;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     // Display game over screen
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -94,6 +103,56 @@ function gameOver() {
     startButton.style.display = 'block'; // Show the start button again
 }
 
+const BLOCK_INTERVAL = [60, 200]; // Range of scores before the next block appears
+const QUESTION_TIME_LIMIT = 5000; // 5 seconds to answer the question
+
+// Function to show the question overlay
+function showQuestion() {
+    // Pause game
+    isGameStarted = false;
+
+    // Generate a random question
+    const questionData = generateQuestion();
+    displayQuestionOverlay(questionData);
+
+    // Start the timer for the question
+    const timer = setTimeout(() => {
+        // If time runs out without answering, end the game
+        removeQuestionOverlay();
+        gameOver();
+    }, QUESTION_TIME_LIMIT);
+
+    // Set up event listener for answer submission
+    document.querySelectorAll('.answer-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            clearTimeout(timer); // Clear the timer when answered
+            removeQuestionOverlay();
+            if (e.target.dataset.correct === "true") {
+                resumeGame(); // Resume game on correct answer
+            } else {
+                gameOver(); // Game over on incorrect answer
+            }
+        });
+    });
+}
+
+function removeQuestionOverlay() {
+    const overlay = document.querySelector(".question-overlay");
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+// Function to resume game after correct answer
+function resumeGame() {
+    isGameStarted = true;
+    nextBlockScore += Math.floor(Math.random() * (BLOCK_INTERVAL[1] - BLOCK_INTERVAL[0] + 1)) + BLOCK_INTERVAL[0];
+    update(); // Resume the game loop
+}
+
+const MAX_VERTICAL_DIFFERENCE = 250; // Maximum vertical distance between consecutive hoops
+let lastPipeY = canvas.height / 2;
+
 // Update player position, background, and score
 function update() {
     if (!isGameStarted || isGameOver) return; // Prevent the game loop from running if the game isn't started or it's game over
@@ -105,11 +164,31 @@ function update() {
     score += scoreIncrementRate / 20; // Increment score (assuming 60 frames per second)
     scoreDisplay.innerText = Math.floor(score); // Display the integer value of score
 
+    // Check if score has reached 200 and change the background
+    if (score >= 150 && document.body.className !== 'new-background') {
+        document.body.classList.add('new-background'); // Add new background class to body
+    }
+    if (score >= 300 && document.body.className !== 'night-background') {
+        document.body.classList.add('night-background'); // Add new background class to body
+    }
+
+    if (score >= nextBlockScore) {
+        showQuestion(); // Show question and block player
+        return; // Stop update until question is answered
+    }
+
     // Pipe generation logic
     frameCount++;
     if (frameCount % PIPE_FREQUENCY === 0) {
-        const pipeHeight = Math.random() * (canvas.height - PIPE_GAP - groundHeight * 2) + groundHeight; // Random height for pipes
-        pipes.push({ x: canvas.width, y: pipeHeight }); // Create a new pipe with a random height
+        // Calculate new pipe height within the maximum vertical difference
+        const minY = Math.max(groundHeight, lastPipeY - MAX_VERTICAL_DIFFERENCE);
+        const maxY = Math.min(canvas.height - PIPE_GAP - groundHeight, lastPipeY + MAX_VERTICAL_DIFFERENCE);
+        const pipeHeight = Math.random() * (maxY - minY) + minY;
+
+        // Add new pipe to pipes array
+        pipes.push({ x: canvas.width, y: pipeHeight });
+
+        lastPipeY = pipeHeight; //update lastPipeY for next pipe
     }
 
     // Move pipes to the left
@@ -157,6 +236,25 @@ function update() {
 
     draw();
     requestAnimationFrame(update);
+}
+
+function generateQuestion() {
+    return {
+        question: "What is 2 + 2?",
+        options: ["3", "4", "5", "6"],
+        correct: 1 // Index of the correct answer
+    };
+}
+
+// Function to display the question overlay (for illustration)
+function displayQuestionOverlay(questionData) {
+    const overlay = document.createElement("div");
+    overlay.classList.add("question-overlay");
+    overlay.innerHTML = `
+        <p>${questionData.question}</p>
+        ${questionData.options.map((opt, i) => `<button class="answer-option" data-correct="${i === questionData.correct}">${opt}</button>`).join('')}
+    `;
+    document.body.appendChild(overlay);
 }
 
 // Draw everything
