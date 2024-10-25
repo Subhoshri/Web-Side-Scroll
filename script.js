@@ -25,13 +25,19 @@ let scoreIncrementRate = 1; // How fast the score increases (changeable)
 
 // Pipe variables
 let pipes = []; // Array to hold pipe objects
-const PIPE_WIDTH = 50; // Width of the pipe
-const PIPE_GAP = 150; // Space between the top and bottom pipes
-const PIPE_FREQUENCY = 90; // How frequently pipes spawn (in frames)
+const PIPE_WIDTH = 50; // Width of the pipe (rod)
+const PIPE_GAP = 150; // Space between the top and bottom pipes (hoop)
+const PIPE_FREQUENCY = 120; // How frequently pipes spawn (in frames)
 let frameCount = 0; // Frame counter for pipe generation
 
 // Variable to keep track of the last speed increase
 let lastSpeedIncrease = 0;
+
+// Load custom rod and hoop images
+const rodImage = new Image();
+rodImage.src = './Assets/rod.png'; // Replace with the actual path to your rod image
+const hoopImage = new Image();
+hoopImage.src = './Assets/hoop.png'; // Replace with the actual path to your hoop image
 
 // Start button event listener
 startButton.addEventListener('click', startGame);
@@ -41,6 +47,10 @@ document.addEventListener('keydown', (e) => {
     if (isGameStarted && !isGameOver) {
         if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') player.dy = -player.speed;
         if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') player.dy = player.speed;
+
+        // Horizontal movement
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') player.x -= player.speed;
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') player.x += player.speed;
     }
 });
 
@@ -161,11 +171,14 @@ function draw() {
     // Draw ground at the top
     ctx.fillRect(-scrollOffset, 0, canvas.width * 2, groundHeight);
 
-    // Draw pipes
+    // Draw pipes (rods) and hoops
     pipes.forEach(pipe => {
-        ctx.fillStyle = '#228B22'; // green color for pipes
-        ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.y); // Top pipe
-        ctx.fillRect(pipe.x, pipe.y + PIPE_GAP, PIPE_WIDTH, canvas.height - pipe.y - PIPE_GAP); // Bottom pipe
+        // Draw rod
+        ctx.drawImage(rodImage, pipe.x, 0, PIPE_WIDTH, pipe.y); // Top rod
+        ctx.drawImage(rodImage, pipe.x, pipe.y + PIPE_GAP, PIPE_WIDTH, canvas.height - pipe.y - PIPE_GAP); // Bottom rod
+
+        // Draw hoop
+        ctx.drawImage(hoopImage, pipe.x, pipe.y, PIPE_WIDTH, PIPE_GAP); // Hoop in the gap
     });
 
     // Check if the ground has scrolled out of view and reset scrollOffset
