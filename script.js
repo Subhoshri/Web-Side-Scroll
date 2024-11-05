@@ -2,7 +2,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const startButton = document.getElementById('startButton');
 const scoreDisplay = document.getElementById('score'); // Access the score display element
-
+ 
 // Setting canvas dimensions
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
