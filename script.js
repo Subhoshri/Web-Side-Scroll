@@ -2,17 +2,33 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const startButton = document.getElementById('startButton');
 const scoreDisplay = document.getElementById('score'); // Access the score display element
- 
+
 // Setting canvas dimensions
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+
+// Rules Display
+const rulesButton = document.getElementById('rulesButton');
+const rulesOverlay = document.getElementById('rulesOverlay');
+const closeRules = document.getElementById('closeRules');
+const gameTitle = document.getElementById('gameTitle');
+
+// Show rules overlay when 'Rules' button is clicked
+rulesButton.addEventListener('click', () => {
+    rulesOverlay.style.display = 'flex';
+});
+
+// Hide rules overlay when 'Close' button is clicked
+closeRules.addEventListener('click', () => {
+    rulesOverlay.style.display = 'none';
+});
 
 // Game variables
 let player = {
     x: canvas.width / 4.5, // Center horizontally
     y: canvas.height / 2, // Center vertically
-    width: 50,
-    height: 50,
+    width: 100,
+    height: 70,
     speed: 3, // Constant forward speed
     dy: 0 // Vertical speed initialized to 0
 };
@@ -22,6 +38,17 @@ let isGameStarted = false; // Control when the game starts
 let isGameOver = false; // Track game over state
 let score = 0; // Score variable
 let scoreIncrementRate = 1; // How fast the score increases (changeable)
+
+//Questions
+const questions = [
+    { question: "Oh no! A BAT appeared. Defeat it!", options: ["Gorgio", "Flipendo", "Riddikulus"], correct: 1, characterImage: './Assets/bat.png' },
+    { question: "A RED CAP! Make it go away!", options: ["Lumos", "Riddikulus", "Spongify"], correct: 2, characterImage: './Assets/redcap.png' },
+    { question: "What a Giant GRINDYLOW! Jinx it!", options: ["Relashio", "Expelliarmus", "Obliviate"], correct: 0, characterImage: './Assets/grindylow.png' },
+    { question: "A DEMENTOR! Don't let it kiss you! ", options: ["Alohomora", "Expecto Patronum", "Expelliarmus"], correct: 1, characterImage: './Assets/dementor.png' },
+    { question: "Ehh, a BOWTRUCKLE! Fire it away!", options: ["Accio", "Incendio", "Ascendio"], correct: 1, characterImage: './Assets/bowtruckle.png' },
+    { question: "A wicked PIXIE appeared! Make it go!", options: ["Spongify", "Expecto Patronum", "Incendio"], correct: 2, characterImage: './Assets/pixie.png' },
+    { question: "What a creepy GIANT SPIDER! Destroy it!", options: ["Petrificus Totalus", "Episkey", "Descendo"], correct: 0, characterImage: './Assets/spider.png' }
+];
 
 // Pipe variables
 let pipes = []; // Array to hold pipe objects
@@ -33,11 +60,14 @@ let frameCount = 0; // Frame counter for pipe generation
 // Variable to keep track of the last speed increase
 let lastSpeedIncrease = 0;
 
-// Load custom rod and hoop images
+// Load custom rod and hoop and character images
 const rodImage = new Image();
 rodImage.src = './Assets/rod.png'; // Replace with the actual path to your rod image
 const hoopImage = new Image();
 hoopImage.src = './Assets/hoop.png'; // Replace with the actual path to your hoop image
+const characterImage = new Image();
+characterImage.src = './Assets/harry.png'; // Path to your character image
+
 
 // Start button event listener
 startButton.addEventListener('click', startGame);
@@ -62,14 +92,18 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
-let nextBlockScore = 200; // Starting score for the first block appearance
+let nextBlockScore = 50; // Starting score for the first block appearance
 let initialSpeed=3;
 
 // Function to start the game
 function startGame() {
     document.body.classList.remove('new-background');
     document.body.classList.remove('night-background');
-
+    document.body.classList.add('background');
+    // Hide the rules overlay (if open) when the game starts
+    rulesButton.style.display = 'none';
+    gameTitle.style.display = 'none';
+    // Hide the start screen and start the game logic
     isGameStarted = true;
     isGameOver = false;
     startButton.style.display = 'none'; // Hide the start button
@@ -80,7 +114,7 @@ function startGame() {
     scrollOffset = 0; // Reset scroll offset
     pipes = []; // Reset pipes
     frameCount = 0; // Reset frame count
-    nextBlockScore = 150;
+    nextBlockScore = 50;
     lastSpeedIncrease = 0;
     update(); // Start the game loop
 }
@@ -96,7 +130,7 @@ function gameOver() {
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "48px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 100);
+    ctx.fillText("Oh no! Game Over", canvas.width / 2, canvas.height / 2 - 100);
     ctx.fillText(`Final Score: ${Math.floor(score)}`, canvas.width / 2, canvas.height / 2 - 40);
     ctx.fillText("Press Start to Play Again", canvas.width / 2, canvas.height / 2 + 70);
     
@@ -105,6 +139,22 @@ function gameOver() {
 
 const BLOCK_INTERVAL = [60, 200]; // Range of scores before the next block appears
 const QUESTION_TIME_LIMIT = 5000; // 5 seconds to answer the question
+
+function generateQuestion() {
+    return questions[Math.floor(Math.random() * questions.length)]; // Randomly select a question
+}
+
+// Function to display the question overlay (for illustration)
+function displayQuestionOverlay(questionData) {
+    const overlay = document.createElement("div");
+    overlay.classList.add("question-overlay");
+    overlay.innerHTML = `
+        <img src="${questionData.characterImage}" alt="Character" class="character-image" />
+        <p>${questionData.question}</p>
+        ${questionData.options.map((opt, i) => `<button class="answer-option" data-correct="${i === questionData.correct}">${opt}</button>`).join('')}
+    `;
+    document.body.appendChild(overlay);
+}
 
 // Function to show the question overlay
 function showQuestion() {
@@ -124,8 +174,11 @@ function showQuestion() {
 
     // Set up event listener for answer submission
     document.querySelectorAll('.answer-option').forEach(option => {
-        option.addEventListener('click', (e) => {
-            clearTimeout(timer); // Clear the timer when answered
+        const newOption = option.cloneNode(true); // Clone the option to remove old listeners
+        option.parentNode.replaceChild(newOption, option);
+    
+        newOption.addEventListener('click', (e) => {
+            clearTimeout(timer); // Clear timer on answer
             removeQuestionOverlay();
             if (e.target.dataset.correct === "true") {
                 resumeGame(); // Resume game on correct answer
@@ -134,6 +187,7 @@ function showQuestion() {
             }
         });
     });
+    
 }
 
 function removeQuestionOverlay() {
@@ -165,10 +219,10 @@ function update() {
     scoreDisplay.innerText = Math.floor(score); // Display the integer value of score
 
     // Check if score has reached 200 and change the background
-    if (score >= 150 && document.body.className !== 'new-background') {
+    if (score >= 130 && document.body.className !== 'new-background') {
         document.body.classList.add('new-background'); // Add new background class to body
     }
-    if (score >= 300 && document.body.className !== 'night-background') {
+    if (score >= 320 && document.body.className !== 'night-background') {
         document.body.classList.add('night-background'); // Add new background class to body
     }
 
@@ -222,7 +276,7 @@ function update() {
 
     // Check if the score has crossed a multiple of 100
     if (Math.floor(score / 100) > lastSpeedIncrease) {
-        player.speed += 1; // Increase speed
+        player.speed += 0.5; // Increase speed
         scoreIncrementRate += 0.5; // Increase score increment rate
         lastSpeedIncrease++; // Update the last speed increase
     }
@@ -236,25 +290,6 @@ function update() {
 
     draw();
     requestAnimationFrame(update);
-}
-
-function generateQuestion() {
-    return {
-        question: "What is 2 + 2?",
-        options: ["3", "4", "5", "6"],
-        correct: 1 // Index of the correct answer
-    };
-}
-
-// Function to display the question overlay (for illustration)
-function displayQuestionOverlay(questionData) {
-    const overlay = document.createElement("div");
-    overlay.classList.add("question-overlay");
-    overlay.innerHTML = `
-        <p>${questionData.question}</p>
-        ${questionData.options.map((opt, i) => `<button class="answer-option" data-correct="${i === questionData.correct}">${opt}</button>`).join('')}
-    `;
-    document.body.appendChild(overlay);
 }
 
 // Draw everything
@@ -279,14 +314,13 @@ function draw() {
         ctx.drawImage(hoopImage, pipe.x, pipe.y, PIPE_WIDTH, PIPE_GAP); // Hoop in the gap
     });
 
+    // Player character
+    ctx.drawImage(characterImage,player.x, player.y, player.width, player.height)
+    
     // Check if the ground has scrolled out of view and reset scrollOffset
     if (scrollOffset >= canvas.width) {
         scrollOffset = 0; // Reset to create an endless effect
     }
-
-    // Player character
-    ctx.fillStyle = '#FF6347'; // tomato color
-    ctx.fillRect(player.x, player.y, player.width, player.height);
 }
 
 // Initially, the game is not running until the start button is clicked.
