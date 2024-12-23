@@ -1,6 +1,6 @@
 # Quidditch Quest
 
-Welcome to *Quidditch Quest*, a side-scrolling game inspired by the magical world of wizards! Navigate through challenging obstacles, pass through enchanted hoops, and answer timed questions to progress through the game.
+Welcome to *Quidditch Quest*, a beginner side-scrolling game inspired by the magical world of wizards! Navigate through challenging obstacles, pass through enchanted hoops, and answer timed questions to progress through the game.
 
 Access The Game Here: [Quidditch Quest](https://quidditch-quest.netlify.app/)
 
