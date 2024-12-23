@@ -2,7 +2,7 @@
 
 Welcome to *Quidditch Quest*, a side-scrolling game inspired by the magical world of wizards! Navigate through challenging obstacles, pass through enchanted hoops, and answer timed questions to progress through the game.
 
-Access The Game Here: [Quidditch Quest](https://side-scrolling.netlify.app/)
+Access The Game Here: [Quidditch Quest](https://quidditch-quest.netlify.app/)
 
 ## Table of Contents
 - [Game Overview](#game-overview)
@@ -36,8 +36,6 @@ In *Quidditch Quest*, players control a wizard navigating a side-scrolling cours
 ## Controls
 - *Move Up*: W key or Up Arrow
 - *Move Down*: S key or Down Arrow
-- *Move Left*: A key or Left Arrow
-- *Move Right*: D key or Right Arrow
 - *Answer Questions*: Click on the correct answer within the time limit.
 
 ## Features
